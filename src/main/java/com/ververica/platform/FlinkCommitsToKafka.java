@@ -10,13 +10,31 @@ import com.ververica.platform.entities.Commit;
 import com.ververica.platform.io.source.GithubCommitSource;
 
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static com.ververica.platform.io.source.GithubCommitSource.EVALUATION_ZONE;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public class FlinkCommitsToKafka {
 
   public static final String APACHE_FLINK_REPOSITORY = "apache/flink";
+
+  private static final DateTimeFormatter DATA_OR_DATETIME_FORMATTER =
+          new DateTimeFormatterBuilder()
+                  .parseCaseInsensitive()
+                  .append(ISO_LOCAL_DATE)
+                  .optionalStart()
+                  .appendLiteral('T')
+                  .append(ISO_LOCAL_TIME)
+                  .appendLiteral('Z')
+                  .optionalEnd()
+                  .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                  .toFormatter();
 
   public static void main(String[] args) {
     ParameterTool params = ParameterTool.fromArgs(args);
@@ -65,8 +83,10 @@ public class FlinkCommitsToKafka {
       githubCommitSource =
           new GithubCommitSource(APACHE_FLINK_REPOSITORY, Instant.now(), delayBetweenQueries);
     } else {
-      Instant startDate =
-          LocalDate.parse(startDateString).atStartOfDay(EVALUATION_ZONE).toInstant();
+      Instant startDate = LocalDateTime
+              .parse(startDateString, DATA_OR_DATETIME_FORMATTER)
+              .atZone(EVALUATION_ZONE)
+              .toInstant();
       githubCommitSource =
           new GithubCommitSource(APACHE_FLINK_REPOSITORY, startDate, delayBetweenQueries);
     }
