@@ -24,7 +24,7 @@ public class FlinkCommitsToKafka {
 
   public static final String APACHE_FLINK_REPOSITORY = "apache/flink";
 
-  private static final DateTimeFormatter DATA_OR_DATETIME_FORMATTER =
+  private static final DateTimeFormatter DATE_OR_DATETIME_FORMATTER =
           new DateTimeFormatterBuilder()
                   .parseCaseInsensitive()
                   .append(ISO_LOCAL_DATE)
@@ -84,7 +84,7 @@ public class FlinkCommitsToKafka {
           new GithubCommitSource(APACHE_FLINK_REPOSITORY, Instant.now(), delayBetweenQueries);
     } else {
       Instant startDate = LocalDateTime
-              .parse(startDateString, DATA_OR_DATETIME_FORMATTER)
+              .parse(startDateString, DATE_OR_DATETIME_FORMATTER)
               .atZone(EVALUATION_ZONE)
               .toInstant();
       githubCommitSource =
