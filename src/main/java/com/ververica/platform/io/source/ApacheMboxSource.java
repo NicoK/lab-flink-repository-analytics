@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.CharConversionException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -37,6 +38,7 @@ import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +51,8 @@ import static java.time.temporal.ChronoField.YEAR;
 public class ApacheMboxSource extends RichSourceFunction<Email> implements CheckpointedFunction {
 
   private static final Logger LOG = LoggerFactory.getLogger(ApacheMboxSource.class);
+
+  private static final boolean SKIP_NON_EXISTING_MBOX = true;
 
   private static final DateTimeFormatter MBOX_DATE_FORMATTER =
           new DateTimeFormatterBuilder()
@@ -96,34 +100,45 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
       }
 
       String url = "http://mail-archives.apache.org/mod_mbox/" + listName + "/" + MBOX_DATE_FORMATTER.format(lastDate) + ".mbox";
-      LOG.debug("Fetching mails from {}", url);
-
-      InputStream in = new URL(url).openStream();
-      Files.copy(in, mboxFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      LOG.info("Fetching mails from {}", url);
 
       List<Email> emails = null;
-      for (CharsetEncoder encoder : ENCODERS) {
-        encoder.reset();
-        try (MboxIterator mboxIterator = MboxIterator.fromFile(mboxFile).charset(encoder.charset())
-                .build()) {
-          LOG.debug("Decoding with {}", encoder);
-
-          emails = StreamSupport.stream(mboxIterator.spliterator(), false)
-                  .map(message -> fromMessage(message, encoder.charset()))
-                  .filter(email -> email.getDate().isAfter(lastDate))
-                  .collect(Collectors.toList());
-
-          LOG.debug("Found {} messages", emails.size());
-          break;
-        } catch (CharConversionException | IllegalArgumentException ex) {
-          // Not the right encoder
-        } catch (IOException ex) {
-          LOG.warn("Failed to open mbox file {} downloaded from {}", mboxFile.getName(), url, ex);
+      try {
+        InputStream in = new URL(url).openStream();
+        Files.copy(in, mboxFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      } catch (FileNotFoundException e) {
+        if (SKIP_NON_EXISTING_MBOX) {
+          emails = Collections.emptyList();
+        } else {
+          throw e;
         }
       }
 
       if (emails == null) {
-        throw new IOException("No valid charset found");
+        for (CharsetEncoder encoder : ENCODERS) {
+          encoder.reset();
+          try (MboxIterator mboxIterator = MboxIterator.fromFile(mboxFile)
+                  .charset(encoder.charset())
+                  .build()) {
+            LOG.info("Decoding with {}", encoder);
+
+            emails = StreamSupport.stream(mboxIterator.spliterator(), false)
+                    .map(message -> fromMessage(message, encoder.charset()))
+                    .filter(email -> email.getDate().isAfter(lastDate))
+                    .collect(Collectors.toList());
+
+            LOG.info("Found {} messages", emails.size());
+            break;
+          } catch (CharConversionException | IllegalArgumentException ex) {
+            // Not the right encoder
+          } catch (IOException ex) {
+            LOG.warn("Failed to open mbox file {} downloaded from {}", mboxFile.getName(), url, ex);
+          }
+        }
+
+        if (emails == null) {
+          throw new IOException("No valid charset found");
+        }
       }
 
       boolean isCurrentMonth = lastDate.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
