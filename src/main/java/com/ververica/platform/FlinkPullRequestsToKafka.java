@@ -2,14 +2,11 @@ package com.ververica.platform;
 
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-import com.ververica.platform.entities.Commit;
 import com.ververica.platform.entities.PullRequest;
-import com.ververica.platform.io.source.GithubCommitSource;
 import com.ververica.platform.io.source.GithubPullRequestSource;
 
 import java.time.Instant;
