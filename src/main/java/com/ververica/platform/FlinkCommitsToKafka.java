@@ -12,7 +12,7 @@ import com.ververica.platform.io.source.GithubCommitSource;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-import static com.ververica.platform.io.source.GithubCommitSource.EVALUATION_ZONE;
+import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
