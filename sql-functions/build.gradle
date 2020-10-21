@@ -1,0 +1,7 @@
+// common set of dependencies
+dependencies {
+    // --------------------------------------------------------------
+    // Compile-time dependencies that should NOT be part of the
+    // shadow jar and are provided in the lib folder of Flink
+    // --------------------------------------------------------------
+}
