@@ -1,3 +1,5 @@
+apply plugin: 'application'
+
 mainClassName = 'com.ververica.platform.FlinkCommitProgram'
 
 // common set of dependencies
@@ -6,6 +8,10 @@ dependencies {
     // Compile-time dependencies that should NOT be part of the
     // shadow jar and are provided in the lib folder of Flink
     // --------------------------------------------------------------
+    flinkShadowJar "org.apache.flink:flink-connector-elasticsearch7_${scalaBinaryVersion}:${flinkVersion}"
+    flinkShadowJar "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}"
+    flinkShadowJar "org.apache.flink:flink-json:${flinkVersion}"
+
     flinkShadowJar "org.kohsuke:github-api:1.109"
     flinkShadowJar "com.squareup.okhttp3:okhttp-urlconnection:3.13.1"
     flinkShadowJar "org.apache.james:apache-mime4j-core:0.8.3"

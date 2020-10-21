@@ -24,9 +24,6 @@ plugins {
 subprojects {
 
     apply plugin: 'java'
-    if (project != project(":common")) {
-        apply plugin: 'application'
-    }
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'io.freefair.lombok'
@@ -89,10 +86,6 @@ subprojects {
         implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
         implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
         implementation "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"
-        
-        flinkShadowJar "org.apache.flink:flink-connector-elasticsearch7_${scalaBinaryVersion}:${flinkVersion}"
-        flinkShadowJar "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}"
-        flinkShadowJar "org.apache.flink:flink-json:${flinkVersion}"
 
         if (project != project(":common")) {
             implementation project(path: ':common')
