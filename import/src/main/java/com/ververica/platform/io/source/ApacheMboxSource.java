@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -73,6 +74,8 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
           StandardCharsets.UTF_16BE.newEncoder(),
           StandardCharsets.UTF_16LE.newEncoder());
 
+  private final long pollIntervalMillis;
+
   private final String listName;
 
   private LocalDateTime lastDate;
@@ -83,22 +86,23 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
 
   private transient File mboxFile = null;
 
-  public ApacheMboxSource(String listName) {
-    this(listName, LocalDateTime.now().withDayOfMonth(1));
-  }
-
-  public ApacheMboxSource(String listName, LocalDateTime startDate) {
+  public ApacheMboxSource(String listName, LocalDateTime startDate, long pollIntervalMillis) {
     this.listName = listName;
     this.lastDate = startDate;
+    this.pollIntervalMillis = pollIntervalMillis;
   }
 
   @Override
-  public void run(SourceContext<Email> ctx) throws IOException, InterruptedException {
+  public void run(SourceContext<Email> ctx) throws IOException {
     LocalDateTime nextPollTime = LocalDateTime.MIN;
     while (running) {
       if (nextPollTime.isAfter(LocalDateTime.now())) {
-        //noinspection BusyWait
-        Thread.sleep(10_000);
+        try {
+          //noinspection BusyWait
+          Thread.sleep(10_000);
+        } catch (InterruptedException e) {
+          running = false;
+        }
         continue;
       }
 
@@ -159,12 +163,12 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
           }
         }
 
-        // If current month is reached, only poll once per hour for new data.
+        // If current month is reached, delay next poll for data.
         // Also update next date to allow according with the highest seen (current month) or
         // assumed (for previous months).
         final LocalDateTime nextDate;
         if (isCurrentMonth) {
-          nextPollTime = LocalDateTime.now().plus(1, ChronoUnit.HOURS);
+          nextPollTime = LocalDateTime.now().plus(pollIntervalMillis, ChronoUnit.MILLIS);
           if (maxDate == null) {
             nextDate = lastDate;
           } else {

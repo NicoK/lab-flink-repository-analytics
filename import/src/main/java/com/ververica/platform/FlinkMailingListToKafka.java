@@ -8,6 +8,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import com.ververica.platform.io.source.ApacheMboxSource;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -21,7 +22,7 @@ import static java.time.temporal.ChronoField.YEAR;
 
 public class FlinkMailingListToKafka {
 
-  private static final DateTimeFormatter DATE_OR_DATETIME_FORMATTER =
+  public static final DateTimeFormatter DATE_OR_DATETIME_FORMATTER =
           new DateTimeFormatterBuilder()
                   .parseCaseInsensitive()
                   .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
@@ -48,6 +49,7 @@ public class FlinkMailingListToKafka {
     String kafkaTopic = params.get("kafka-topic", "flink-mail");
 
     // Source
+    long delayBetweenQueries = params.getLong("poll-interval-ms", 10_000L);
     String startDateString = params.get("start-date", "");
 
     StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -58,17 +60,17 @@ public class FlinkMailingListToKafka {
     env.getConfig().enableObjectReuse();
 
     Table emailsFlinkDev = tableEnv.fromDataStream(
-            env.addSource(getApacheMailingListSource("flink-dev", startDateString))
+            env.addSource(getApacheMailingListSource("flink-dev", delayBetweenQueries, startDateString))
                     .name("flink-dev-source")
                     .uid("flink-dev-source"));
 
     Table emailsFlinkUser = tableEnv.fromDataStream(
-            env.addSource(getApacheMailingListSource("flink-user", startDateString))
+            env.addSource(getApacheMailingListSource("flink-user", delayBetweenQueries, startDateString))
                     .name("flink-user-source")
                     .uid("flink-user-source"));
 
     Table emailsFlinkUserZh = tableEnv.fromDataStream(
-        env.addSource(getApacheMailingListSource("flink-user-zh", startDateString))
+        env.addSource(getApacheMailingListSource("flink-user-zh", delayBetweenQueries, startDateString))
             .name("flink-user-zh-source")
             .uid("flink-user-zh-source"));
 
@@ -119,14 +121,14 @@ public class FlinkMailingListToKafka {
   }
 
   private static ApacheMboxSource getApacheMailingListSource(
-          String listName, final String startDateString) {
+          String listName, long delayBetweenQueries, final String startDateString) {
     final ApacheMboxSource apacheMailinglistSource;
     if (startDateString.isEmpty()) {
-      apacheMailinglistSource = new ApacheMboxSource(listName);
+      apacheMailinglistSource = new ApacheMboxSource(listName, LocalDateTime.now(), delayBetweenQueries);
     } else {
       LocalDateTime startDate = LocalDateTime
               .parse(startDateString, DATE_OR_DATETIME_FORMATTER);
-      apacheMailinglistSource = new ApacheMboxSource(listName, startDate);
+      apacheMailinglistSource = new ApacheMboxSource(listName, startDate, delayBetweenQueries);
     }
     return apacheMailinglistSource;
   }

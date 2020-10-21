@@ -1,15 +1,5 @@
 package com.ververica.platform.io.source;
 
-import com.ververica.platform.entities.Commit;
-import com.ververica.platform.entities.FileChanged;
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -17,6 +7,9 @@ import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.watermark.Watermark;
+
+import com.ververica.platform.entities.Commit;
+import com.ververica.platform.entities.FileChanged;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
@@ -24,7 +17,15 @@ import org.kohsuke.github.PagedIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class GithubCommitSource extends GithubSource<Commit> implements CheckpointedFunction {
 
@@ -40,10 +41,6 @@ public class GithubCommitSource extends GithubSource<Commit> implements Checkpoi
 
   private transient ListState<Instant> state;
 
-  public GithubCommitSource(String repoName) {
-    this(repoName, Instant.now(), 1000);
-  }
-
   public GithubCommitSource(String repoName, Instant startTime, long pollIntervalMillis) {
     super(repoName);
     this.lastTime = startTime;
@@ -52,9 +49,12 @@ public class GithubCommitSource extends GithubSource<Commit> implements Checkpoi
 
   @Override
   public void run(SourceContext<Commit> ctx) throws IOException {
+    boolean delayNextPoll;
     GHRepository repo = gitHub.getRepository(repoName);
     while (running) {
-      Instant until = getUntilFor(lastTime);
+      Tuple2<Instant, Boolean> untilTuple = getUntilFor(lastTime);
+      Instant until = untilTuple.f0;
+      delayNextPoll = untilTuple.f1;
       LOG.debug("Fetching commits since {} until {}", lastTime, until);
       PagedIterable<GHCommit> commits =
           repo.queryCommits().since(Date.from(lastTime)).until(Date.from(until)).list();
@@ -73,7 +73,7 @@ public class GithubCommitSource extends GithubSource<Commit> implements Checkpoi
         ctx.emitWatermark(new Watermark(lastTime.toEpochMilli()));
       }
 
-      if (pollIntervalMillis > 0) {
+      if (delayNextPoll && pollIntervalMillis > 0) {
         try {
           //noinspection BusyWait
           Thread.sleep(pollIntervalMillis);
@@ -128,14 +128,14 @@ public class GithubCommitSource extends GithubSource<Commit> implements Checkpoi
     running = false;
   }
 
-  public static Instant getUntilFor(Instant since) {
+  public static Tuple2<Instant, /* delay next? */ Boolean> getUntilFor(Instant since) {
     Instant maybeUntil = since.plus(1, ChronoUnit.DAYS);
 
     Instant now = Instant.now();
     if (maybeUntil.compareTo(now) > 0) {
-      return now;
+      return Tuple2.of(now, true);
     } else {
-      return maybeUntil;
+      return Tuple2.of(maybeUntil, false);
     }
   }
 

@@ -12,29 +12,12 @@ import com.ververica.platform.io.source.GithubCommitSource;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
+import static com.ververica.platform.FlinkMailingListToKafka.DATE_OR_DATETIME_FORMATTER;
 import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public class FlinkCommitsToKafka {
 
   public static final String APACHE_FLINK_REPOSITORY = "apache/flink";
-
-  private static final DateTimeFormatter DATE_OR_DATETIME_FORMATTER =
-          new DateTimeFormatterBuilder()
-                  .parseCaseInsensitive()
-                  .append(ISO_LOCAL_DATE)
-                  .optionalStart()
-                  .appendLiteral('T')
-                  .append(ISO_LOCAL_TIME)
-                  .appendLiteral('Z')
-                  .optionalEnd()
-                  .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-                  .toFormatter();
 
   public static void main(String[] args) {
     ParameterTool params = ParameterTool.fromArgs(args);
