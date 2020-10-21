@@ -151,9 +151,7 @@ subprojects {
     shadowJar {
         configurations = [project.configurations.flinkShadowJar]
         mergeServiceFiles()
-        if (project.parent != rootProject) {
-            archiveBaseName.set("${project.parent.name}-${project.name}")
-        }
+        archiveBaseName.set("${project.parent.name}-${project.name}")
     }
 
     assemble.dependsOn(shadowJar)
