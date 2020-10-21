@@ -1,28 +1,10 @@
 package com.ververica.platform.io.source;
 
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.state.FunctionInitializationContext;
-import org.apache.flink.runtime.state.FunctionSnapshotContext;
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
-import org.apache.flink.streaming.api.watermark.Watermark;
+import static com.ververica.platform.io.source.GithubSource.dateToLocalDateTime;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
 
 import com.ververica.platform.entities.Email;
-import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageBuilder;
-import org.apache.james.mime4j.dom.address.Mailbox;
-import org.apache.james.mime4j.dom.field.FieldName;
-import org.apache.james.mime4j.dom.field.MailboxField;
-import org.apache.james.mime4j.dom.field.MailboxListField;
-import org.apache.james.mime4j.mboxiterator.CharBufferWrapper;
-import org.apache.james.mime4j.mboxiterator.MboxIterator;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.CharConversionException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,13 +26,28 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
-import static com.ververica.platform.io.source.GithubSource.dateToLocalDateTime;
-import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
-import static java.time.temporal.ChronoField.YEAR;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
+import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.streaming.api.watermark.Watermark;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.MessageBuilder;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.field.FieldName;
+import org.apache.james.mime4j.dom.field.MailboxField;
+import org.apache.james.mime4j.dom.field.MailboxListField;
+import org.apache.james.mime4j.mboxiterator.CharBufferWrapper;
+import org.apache.james.mime4j.mboxiterator.MboxIterator;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ApacheMboxSource extends RichSourceFunction<Email> implements CheckpointedFunction {
 
@@ -59,14 +56,15 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
   private static final boolean SKIP_NON_EXISTING_MBOX = true;
 
   private static final DateTimeFormatter MBOX_DATE_FORMATTER =
-          new DateTimeFormatterBuilder()
-                  .parseCaseInsensitive()
-                  .appendValue(YEAR, 4, 4, SignStyle.EXCEEDS_PAD)
-                  .appendValue(MONTH_OF_YEAR, 2)
-                  .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
-                  .toFormatter();
+      new DateTimeFormatterBuilder()
+          .parseCaseInsensitive()
+          .appendValue(YEAR, 4, 4, SignStyle.EXCEEDS_PAD)
+          .appendValue(MONTH_OF_YEAR, 2)
+          .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+          .toFormatter();
 
-  public static final List<CharsetEncoder> ENCODERS = Arrays.asList(
+  public static final List<CharsetEncoder> ENCODERS =
+      Arrays.asList(
           StandardCharsets.ISO_8859_1.newEncoder(),
           StandardCharsets.UTF_8.newEncoder(),
           StandardCharsets.US_ASCII.newEncoder(),
@@ -106,7 +104,12 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
         continue;
       }
 
-      String url = "http://mail-archives.apache.org/mod_mbox/" + listName + "/" + MBOX_DATE_FORMATTER.format(lastDate) + ".mbox";
+      String url =
+          "http://mail-archives.apache.org/mod_mbox/"
+              + listName
+              + "/"
+              + MBOX_DATE_FORMATTER.format(lastDate)
+              + ".mbox";
       LOG.info("Fetching mails from {}", url);
 
       List<Email> emails = null;
@@ -124,12 +127,12 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
       if (emails == null) {
         for (CharsetEncoder encoder : ENCODERS) {
           encoder.reset();
-          try (MboxIterator mboxIterator = MboxIterator.fromFile(mboxFile)
-                  .charset(encoder.charset())
-                  .build()) {
+          try (MboxIterator mboxIterator =
+              MboxIterator.fromFile(mboxFile).charset(encoder.charset()).build()) {
             LOG.info("Decoding with {}", encoder);
 
-            emails = StreamSupport.stream(mboxIterator.spliterator(), false)
+            emails =
+                StreamSupport.stream(mboxIterator.spliterator(), false)
                     .map(message -> fromMessage(message, encoder.charset()))
                     .filter(email -> email.getDate().isAfter(lastDate))
                     .collect(Collectors.toList());
@@ -148,14 +151,17 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
         }
       }
 
-      boolean isCurrentMonth = lastDate.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+      boolean isCurrentMonth =
+          lastDate
+              .withDayOfMonth(1)
+              .truncatedTo(ChronoUnit.DAYS)
               .isEqual(LocalDateTime.now().withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS));
       long maxTimestamp = 0L;
       LocalDateTime maxDate = null;
       synchronized (ctx.getCheckpointLock()) {
         for (Email email : emails) {
           long timestamp =
-                  email.getDate().atZone(GithubSource.EVALUATION_ZONE).toInstant().toEpochMilli();
+              email.getDate().atZone(GithubSource.EVALUATION_ZONE).toInstant().toEpochMilli();
           ctx.collectWithTimestamp(email, timestamp);
           if (timestamp > maxTimestamp) {
             maxTimestamp = timestamp;
@@ -176,17 +182,14 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
           }
         } else {
           // assume month is complete
-          nextDate = lastDate
-              .withDayOfMonth(1)
-              .truncatedTo(ChronoUnit.DAYS)
-              .plus(1, ChronoUnit.MONTHS);
+          nextDate =
+              lastDate.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS).plus(1, ChronoUnit.MONTHS);
           nextPollTime = nextDate;
         }
 
         lastDate = nextDate;
-        long nextDateMillis = nextDate.atZone(GithubSource.EVALUATION_ZONE)
-                .toInstant()
-                .toEpochMilli();
+        long nextDateMillis =
+            nextDate.atZone(GithubSource.EVALUATION_ZONE).toInstant().toEpochMilli();
         ctx.emitWatermark(new Watermark(nextDateMillis - 1));
       }
     }
@@ -201,11 +204,11 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
 
       Tuple2<String, Mailbox> author = getAuthor(message);
       return Email.builder()
-              .date(date)
-              .fromRaw(author.f0)
-              .fromEmail(author.f1.toString())
-              .subject(message.getSubject())
-              .build();
+          .date(date)
+          .fromRaw(author.f0)
+          .fromEmail(author.f1.toString())
+          .subject(message.getSubject())
+          .build();
     } catch (Exception e) {
       throw new RuntimeException("Failed to parse email", e);
     }

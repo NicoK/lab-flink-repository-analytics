@@ -1,22 +1,7 @@
 package com.ververica.platform.io.source;
 
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.runtime.state.FunctionInitializationContext;
-import org.apache.flink.runtime.state.FunctionSnapshotContext;
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.streaming.api.watermark.Watermark;
-
 import com.ververica.platform.entities.Commit;
 import com.ververica.platform.entities.FileChanged;
-import org.kohsuke.github.GHCommit;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GHUser;
-import org.kohsuke.github.PagedIterable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -26,6 +11,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
+import org.apache.flink.streaming.api.watermark.Watermark;
+import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
+import org.kohsuke.github.PagedIterable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GithubCommitSource extends GithubSource<Commit> implements CheckpointedFunction {
 
@@ -97,26 +95,26 @@ public class GithubCommitSource extends GithubSource<Commit> implements Checkpoi
 
       return Tuple2.of(
           Commit.builder()
-            .author(getUserName(author))
-            .authorEmail(authorEmail)
-            .committer(getUserName(committer))
-            .committerEmail(committerEmail)
-            .filesChanged(
-                ghCommit.getFiles().stream()
-                    .map(
-                        file ->
-                            FileChanged.builder()
-                                .filename(file.getFileName())
-                                .linesChanged(file.getLinesChanged())
-                                .linesAdded(file.getLinesAdded())
-                                .linesRemoved(file.getLinesDeleted())
-                                .build())
-                    .toArray(FileChanged[]::new))
-            .commitDate(lastCommitDate)
-            .authorDate(lastCommitAuthorDate)
-            .shortInfo(shortInfo)
-            .sha1(sha1)
-            .build(),
+              .author(getUserName(author))
+              .authorEmail(authorEmail)
+              .committer(getUserName(committer))
+              .committerEmail(committerEmail)
+              .filesChanged(
+                  ghCommit.getFiles().stream()
+                      .map(
+                          file ->
+                              FileChanged.builder()
+                                  .filename(file.getFileName())
+                                  .linesChanged(file.getLinesChanged())
+                                  .linesAdded(file.getLinesAdded())
+                                  .linesRemoved(file.getLinesDeleted())
+                                  .build())
+                      .toArray(FileChanged[]::new))
+              .commitDate(lastCommitDate)
+              .authorDate(lastCommitAuthorDate)
+              .shortInfo(shortInfo)
+              .sha1(sha1)
+              .build(),
           ghCommit.getCommitDate());
     } catch (IOException e) {
       throw new RuntimeException("Failed to pull commit from GH", e);

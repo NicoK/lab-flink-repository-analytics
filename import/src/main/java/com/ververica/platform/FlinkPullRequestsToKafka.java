@@ -1,19 +1,17 @@
 package com.ververica.platform;
 
+import static com.ververica.platform.FlinkMailingListToKafka.DATE_OR_DATETIME_FORMATTER;
+import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
+
+import com.ververica.platform.entities.PullRequest;
+import com.ververica.platform.io.source.GithubPullRequestSource;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-
-import com.ververica.platform.entities.PullRequest;
-import com.ververica.platform.io.source.GithubPullRequestSource;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-
-import static com.ververica.platform.FlinkMailingListToKafka.DATE_OR_DATETIME_FORMATTER;
-import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
 
 public class FlinkPullRequestsToKafka {
 
@@ -32,7 +30,7 @@ public class FlinkPullRequestsToKafka {
 
     StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
     EnvironmentSettings settings =
-            EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
+        EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
     StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);
 
     env.getConfig().enableObjectReuse();
@@ -43,31 +41,35 @@ public class FlinkPullRequestsToKafka {
             .uid("flink-pulls-source");
 
     tableEnv.executeSql(
-            "CREATE TABLE `pulls` (\n"
-                    + "`closedAt` TIMESTAMP(3),\n"
-                    + "`commentsCount` INT,\n"
-                    + "`commitCount` INT,\n"
-                    + "`createdAt` TIMESTAMP(3),\n"
-                    + "`creator` STRING,\n"
-                    + "`creatorEmail` STRING,\n"
-                    + "`filesChanged` ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>>,\n"
-                    + "`isMerged` BOOLEAN,\n"
-                    + "`linesAdded` INT,\n"
-                    + "`linesRemoved` INT,\n"
-                    + "`mergedAt` TIMESTAMP(3),\n"
-                    + "`mergedBy` STRING,\n"
-                    + "`mergedByEmail` STRING,\n"
-                    + "`number` INT,\n"
-                    + "`reviewCommentCount` INT,\n"
-                    + "`state` STRING,\n"
-                    + "`title` STRING,\n"
-                    + "`updatedAt` TIMESTAMP(3)\n"
-                    + ") WITH (\n"
-                    + "'connector' = 'kafka',\n"
-                    + "'topic' = '" + kafkaTopic + "',\n"
-                    + "'properties.bootstrap.servers' = '" + kafkaServer + "',\n"
-                    + "'format' = 'json'\n"
-                    + ")");
+        "CREATE TABLE `pulls` (\n"
+            + "`closedAt` TIMESTAMP(3),\n"
+            + "`commentsCount` INT,\n"
+            + "`commitCount` INT,\n"
+            + "`createdAt` TIMESTAMP(3),\n"
+            + "`creator` STRING,\n"
+            + "`creatorEmail` STRING,\n"
+            + "`filesChanged` ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>>,\n"
+            + "`isMerged` BOOLEAN,\n"
+            + "`linesAdded` INT,\n"
+            + "`linesRemoved` INT,\n"
+            + "`mergedAt` TIMESTAMP(3),\n"
+            + "`mergedBy` STRING,\n"
+            + "`mergedByEmail` STRING,\n"
+            + "`number` INT,\n"
+            + "`reviewCommentCount` INT,\n"
+            + "`state` STRING,\n"
+            + "`title` STRING,\n"
+            + "`updatedAt` TIMESTAMP(3)\n"
+            + ") WITH (\n"
+            + "'connector' = 'kafka',\n"
+            + "'topic' = '"
+            + kafkaTopic
+            + "',\n"
+            + "'properties.bootstrap.servers' = '"
+            + kafkaServer
+            + "',\n"
+            + "'format' = 'json'\n"
+            + ")");
 
     tableEnv.fromDataStream(commits).executeInsert("pulls");
   }
@@ -79,8 +81,8 @@ public class FlinkPullRequestsToKafka {
       githubPullRequestSource =
           new GithubPullRequestSource(APACHE_FLINK_REPOSITORY, Instant.now(), delayBetweenQueries);
     } else {
-      Instant startDate = LocalDateTime
-              .parse(startDateString, DATE_OR_DATETIME_FORMATTER)
+      Instant startDate =
+          LocalDateTime.parse(startDateString, DATE_OR_DATETIME_FORMATTER)
               .atZone(EVALUATION_ZONE)
               .toInstant();
       githubPullRequestSource =

@@ -1,14 +1,18 @@
 package com.ververica.platform.io.source;
 
+import com.ververica.platform.entities.FileChanged;
+import com.ververica.platform.entities.PullRequest;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.stream.StreamSupport;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.watermark.Watermark;
-
-import com.ververica.platform.entities.FileChanged;
-import com.ververica.platform.entities.PullRequest;
 import org.kohsuke.github.GHDirection;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
@@ -20,13 +24,8 @@ import org.kohsuke.github.PagedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.stream.StreamSupport;
-
-public class GithubPullRequestSource extends GithubSource<PullRequest> implements CheckpointedFunction {
+public class GithubPullRequestSource extends GithubSource<PullRequest>
+    implements CheckpointedFunction {
 
   private static final Logger LOG = LoggerFactory.getLogger(GithubPullRequestSource.class);
 
@@ -51,8 +50,8 @@ public class GithubPullRequestSource extends GithubSource<PullRequest> implement
     GHRepository repo = gitHub.getRepository(repoName);
     while (running) {
       LOG.debug("Fetching pull requests since {}", lastTime);
-      PagedIterable<GHPullRequest> pullRequests = repo
-              .queryPullRequests()
+      PagedIterable<GHPullRequest> pullRequests =
+          repo.queryPullRequests()
               .base("master")
               .state(GHIssueState.ALL)
               .sort(GHPullRequestQueryBuilder.Sort.CREATED)
@@ -121,8 +120,9 @@ public class GithubPullRequestSource extends GithubSource<PullRequest> implement
         .commitCount(ghPullRequest.getCommits())
         .linesAdded(ghPullRequest.getAdditions())
         .linesRemoved(ghPullRequest.getDeletions())
-        .filesChanged(StreamSupport
-                .stream(ghPullRequest.listFiles().withPageSize(PAGE_SIZE).spliterator(), false)
+        .filesChanged(
+            StreamSupport.stream(
+                    ghPullRequest.listFiles().withPageSize(PAGE_SIZE).spliterator(), false)
                 .map(
                     file ->
                         FileChanged.builder()

@@ -1,19 +1,17 @@
 package com.ververica.platform;
 
+import static com.ververica.platform.FlinkMailingListToKafka.DATE_OR_DATETIME_FORMATTER;
+import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
+
+import com.ververica.platform.entities.Commit;
+import com.ververica.platform.io.source.GithubCommitSource;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-
-import com.ververica.platform.entities.Commit;
-import com.ververica.platform.io.source.GithubCommitSource;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-
-import static com.ververica.platform.FlinkMailingListToKafka.DATE_OR_DATETIME_FORMATTER;
-import static com.ververica.platform.io.source.GithubSource.EVALUATION_ZONE;
 
 public class FlinkCommitsToKafka {
 
@@ -32,7 +30,7 @@ public class FlinkCommitsToKafka {
 
     StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
     EnvironmentSettings settings =
-            EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
+        EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
     StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);
 
     env.getConfig().enableObjectReuse();
@@ -43,22 +41,26 @@ public class FlinkCommitsToKafka {
             .uid("flink-commit-source");
 
     tableEnv.executeSql(
-            "CREATE TABLE commits (\n"
-                    + "`author` STRING,\n"
-                    + "`authorDate` TIMESTAMP(3),\n"
-                    + "`authorEmail` STRING,\n"
-                    + "`commitDate` TIMESTAMP(3),\n"
-                    + "`committer` STRING,\n"
-                    + "`committerEmail` STRING,\n"
-                    + "`filesChanged` ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>>,\n"
-                    + "`sha1` STRING,\n"
-                    + "`shortInfo` STRING\n"
-                    + ") WITH (\n"
-                    + "'connector' = 'kafka',\n"
-                    + "'topic' = '" + kafkaTopic + "',\n"
-                    + "'properties.bootstrap.servers' = '" + kafkaServer + "',\n"
-                    + "'format' = 'json'\n"
-                    + ")");
+        "CREATE TABLE commits (\n"
+            + "`author` STRING,\n"
+            + "`authorDate` TIMESTAMP(3),\n"
+            + "`authorEmail` STRING,\n"
+            + "`commitDate` TIMESTAMP(3),\n"
+            + "`committer` STRING,\n"
+            + "`committerEmail` STRING,\n"
+            + "`filesChanged` ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>>,\n"
+            + "`sha1` STRING,\n"
+            + "`shortInfo` STRING\n"
+            + ") WITH (\n"
+            + "'connector' = 'kafka',\n"
+            + "'topic' = '"
+            + kafkaTopic
+            + "',\n"
+            + "'properties.bootstrap.servers' = '"
+            + kafkaServer
+            + "',\n"
+            + "'format' = 'json'\n"
+            + ")");
 
     tableEnv.fromDataStream(commits).executeInsert("commits");
   }
@@ -70,8 +72,8 @@ public class FlinkCommitsToKafka {
       githubCommitSource =
           new GithubCommitSource(APACHE_FLINK_REPOSITORY, Instant.now(), delayBetweenQueries);
     } else {
-      Instant startDate = LocalDateTime
-              .parse(startDateString, DATE_OR_DATETIME_FORMATTER)
+      Instant startDate =
+          LocalDateTime.parse(startDateString, DATE_OR_DATETIME_FORMATTER)
               .atZone(EVALUATION_ZONE)
               .toInstant();
       githubCommitSource =
