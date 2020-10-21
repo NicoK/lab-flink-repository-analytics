@@ -17,12 +17,12 @@ jobs:
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
       - name: Verify
-        run: mvn verify --file pom.xml
+        run: ./gradlew check
       - name: Build
-        run: mvn package --file pom.xml
-      - name: Publish to GitHub Packages Apache Maven
-        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        if:
-          success()
+        run: ./gradlew shadowJar
+      #- name: Publish to GitHub Packages Apache Maven
+        #run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+        #env:
+          #GITHUB_TOKEN: ${{ github.token }}
+        #if:
+          #success()
