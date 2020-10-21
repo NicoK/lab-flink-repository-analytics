@@ -60,17 +60,21 @@ public class FlinkCommitsToKafka {
             .uid("flink-commit-source");
 
     tableEnv.executeSql(
-            "CREATE TABLE commits ("
-                    + "author STRING, "
-                    + "`authorDate` TIMESTAMP(3), "
-                    + "commitDate TIMESTAMP(3), "
-                    + "committer STRING, "
-                    + "filesChanged ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>> "
-                    + ") WITH ("
-                    + "'connector' = 'kafka', "
-                    + "'topic' = '" + kafkaTopic + "', "
-                    + "'properties.bootstrap.servers' = '" + kafkaServer + "', "
-                    + "'format' = 'json'"
+            "CREATE TABLE commits (\n"
+                    + "`author` STRING,\n"
+                    + "`authorDate` TIMESTAMP(3),\n"
+                    + "`authorEmail` STRING,\n"
+                    + "`commitDate` TIMESTAMP(3),\n"
+                    + "`committer` STRING,\n"
+                    + "`committerEmail` STRING,\n"
+                    + "`filesChanged` ARRAY<ROW<filename STRING, linesAdded INT, linesChanged INT, linesRemoved INT>>,\n"
+                    + "`sha1` STRING,\n"
+                    + "`shortInfo` STRING\n"
+                    + ") WITH (\n"
+                    + "'connector' = 'kafka',\n"
+                    + "'topic' = '" + kafkaTopic + "',\n"
+                    + "'properties.bootstrap.servers' = '" + kafkaServer + "',\n"
+                    + "'format' = 'json'\n"
                     + ")");
 
     tableEnv.fromDataStream(commits).executeInsert("commits");

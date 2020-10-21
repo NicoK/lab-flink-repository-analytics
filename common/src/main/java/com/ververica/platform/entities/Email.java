@@ -22,7 +22,8 @@ import java.util.Map;
 @TypeInfo(Email.CommitTypeInfoFactory.class)
 public class Email {
   private LocalDateTime date;
-  private String from;
+  private String fromRaw;
+  private String fromEmail;
   private String subject;
 
   public static class CommitTypeInfoFactory extends TypeInfoFactory<Email> {
@@ -32,7 +33,8 @@ public class Email {
             Map<String, TypeInformation<?>> genericParameters) {
       Map<String, TypeInformation<?>> fields = new HashMap<String, TypeInformation<?>>() {{
         put("date", Types.LOCAL_DATE_TIME);
-        put("from", Types.STRING);
+        put("fromRaw", Types.STRING);
+        put("fromEmail", Types.STRING);
         put("subject", Types.STRING);
       }};
       return Types.POJO(Email.class, fields);

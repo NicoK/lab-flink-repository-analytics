@@ -23,7 +23,12 @@ import java.util.Map;
 public class Commit {
   private LocalDateTime commitDate;
   private String committer;
+  private String committerEmail;
   private String author;
+  private String authorEmail;
+  private String shortInfo;
+  private String sha1;
+
   private LocalDateTime authorDate;
   private FileChanged[] filesChanged;
 
@@ -35,9 +40,13 @@ public class Commit {
       Map<String, TypeInformation<?>> fields = new HashMap<String, TypeInformation<?>>() {{
         put("commitDate", Types.LOCAL_DATE_TIME);
         put("committer", Types.STRING);
+        put("committerEmail", Types.STRING);
         put("author", Types.STRING);
         put("authorDate", Types.LOCAL_DATE_TIME);
+        put("authorEmail", Types.STRING);
         put("filesChanged", Types.OBJECT_ARRAY(Types.POJO(FileChanged.class)));
+        put("shortInfo", Types.STRING);
+        put("sha1", Types.STRING);
       }};
       return Types.POJO(Commit.class, fields);
     }
