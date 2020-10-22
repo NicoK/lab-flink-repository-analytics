@@ -8,7 +8,7 @@ public class IsJiraTicket extends ScalarFunction {
     if (fromField == null) {
       return false;
     } else {
-      return PatternUtils.EMAIL_SUBJECT_JIRA_TICKET_PATTERN.matcher(fromField).matches();
+      return PatternUtils.EMAIL_FROM_JIRA_TICKET_AUTHOR_PATTERN.matcher(fromField).matches();
     }
   }
 }
