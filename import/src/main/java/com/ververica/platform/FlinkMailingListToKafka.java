@@ -83,9 +83,9 @@ public class FlinkMailingListToKafka {
             + "`date` TIMESTAMP(3),\n"
             + "`fromEmail` STRING,\n"
             + "`fromRaw` STRING,\n"
+            + "`htmlBody` STRING,\n"
             + "`subject` STRING,\n"
-            + "`textBody` STRING,\n"
-            + "`htmlBody` STRING\n"
+            + "`textBody` STRING\n"
             + ") WITH (\n"
             + "'connector' = 'kafka',\n"
             + "'topic' = '"
@@ -94,6 +94,9 @@ public class FlinkMailingListToKafka {
             + "'properties.bootstrap.servers' = '"
             + kafkaServer
             + "',\n"
+            + "'properties.max.request.size' = '"
+            + 20 * 1024 * 1024
+            + "'"
             + "'format' = 'json'\n"
             + ")");
 
@@ -102,9 +105,9 @@ public class FlinkMailingListToKafka {
             + "`date` TIMESTAMP(3),\n"
             + "`fromEmail` STRING,\n"
             + "`fromRaw` STRING,\n"
+            + "`htmlBody` STRING,\n"
             + "`subject` STRING,\n"
-            + "`textBody` STRING,\n"
-            + "`htmlBody` STRING\n"
+            + "`textBody` STRING\n"
             + ") WITH (\n"
             + "'connector' = 'kafka',\n"
             + "'topic' = '"
@@ -113,6 +116,9 @@ public class FlinkMailingListToKafka {
             + "'properties.bootstrap.servers' = '"
             + kafkaServer
             + "',\n"
+            + "'properties.max.request.size' = '"
+            + 20 * 1024 * 1024
+            + "'"
             + "'format' = 'json'\n"
             + ")");
 
@@ -121,9 +127,9 @@ public class FlinkMailingListToKafka {
             + "`date` TIMESTAMP(3),\n"
             + "`fromEmail` STRING,\n"
             + "`fromRaw` STRING,\n"
+            + "`htmlBody` STRING,\n"
             + "`subject` STRING,\n"
-            + "`textBody` STRING,\n"
-            + "`htmlBody` STRING\n"
+            + "`textBody` STRING\n"
             + ") WITH (\n"
             + "'connector' = 'kafka',\n"
             + "'topic' = '"
@@ -132,6 +138,9 @@ public class FlinkMailingListToKafka {
             + "'properties.bootstrap.servers' = '"
             + kafkaServer
             + "',\n"
+            + "'properties.max.request.size' = '"
+            + 20 * 1024 * 1024
+            + "'"
             + "'format' = 'json'\n"
             + ")");
 

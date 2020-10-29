@@ -36,9 +36,9 @@ public class Email {
               put("date", Types.LOCAL_DATE_TIME);
               put("fromRaw", Types.STRING);
               put("fromEmail", Types.STRING);
+              put("htmlBody", Types.STRING);
               put("subject", Types.STRING);
               put("textBody", Types.STRING);
-              put("htmlBody", Types.STRING);
             }
           };
       return Types.POJO(Email.class, fields);
