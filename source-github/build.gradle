@@ -9,10 +9,7 @@ dependencies {
     // shadow jar and are provided in the lib folder of Flink
     // --------------------------------------------------------------
     api "org.apache.flink:flink-java:${flinkVersion}"
-    api "org.apache.flink:flink-runtime-web_${scalaBinaryVersion}:${flinkVersion}"
-    api "org.apache.flink:flink-runtime_${scalaBinaryVersion}:${flinkVersion}"
     api "org.apache.flink:flink-streaming-java_${scalaBinaryVersion}:${flinkVersion}"
-    api "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
 
     flinkShadowJar "org.kohsuke:github-api:${githubApiVersion}"
     flinkShadowJar "com.squareup.okhttp3:okhttp-urlconnection:${okHttpVersion}"
