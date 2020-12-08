@@ -23,3 +23,12 @@ dependencies {
     flinkShadowJar "org.apache.james:apache-mime4j-dom:0.8.3"
     flinkShadowJar "org.apache.james:apache-mime4j-mbox-iterator:0.8.3"
 }
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifactId = "${project.parent.name}-${project.name}"
+        }
+    }
+}
