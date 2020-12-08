@@ -96,7 +96,7 @@ public class FlinkMailingListToKafka {
             + "',\n"
             + "'properties.max.request.size' = '"
             + 20 * 1024 * 1024
-            + "'"
+            + "',"
             + "'format' = 'json'\n"
             + ")");
 
@@ -118,7 +118,7 @@ public class FlinkMailingListToKafka {
             + "',\n"
             + "'properties.max.request.size' = '"
             + 20 * 1024 * 1024
-            + "'"
+            + "',"
             + "'format' = 'json'\n"
             + ")");
 
@@ -140,7 +140,7 @@ public class FlinkMailingListToKafka {
             + "',\n"
             + "'properties.max.request.size' = '"
             + 20 * 1024 * 1024
-            + "'"
+            + "',"
             + "'format' = 'json'\n"
             + ")");
 
