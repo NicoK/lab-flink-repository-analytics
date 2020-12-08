@@ -4,4 +4,6 @@ dependencies {
     // Compile-time dependencies that should NOT be part of the
     // shadow jar and are provided in the lib folder of Flink
     // --------------------------------------------------------------
+    compile "org.apache.flink:flink-table-api-java-bridge_${scalaBinaryVersion}:${flinkVersion}"
+    compile "org.apache.flink:flink-table-planner-blink_${scalaBinaryVersion}:${flinkVersion}"
 }
