@@ -156,6 +156,7 @@ subprojects {
     shadowJar {
         configurations = [project.configurations.flinkShadowJar]
         mergeServiceFiles()
+        archiveClassifier.set('')
     }
 
     assemble.dependsOn(shadowJar)
