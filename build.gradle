@@ -16,9 +16,9 @@
  */
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.2.0' apply false
-    id "com.diffplug.spotless" version "5.7.0" apply false
-    id "io.freefair.lombok" version "5.2.1" apply false
+    id 'com.github.johnrengelman.shadow' version '6.1.0' apply false
+    id "com.diffplug.spotless" version "5.8.2" apply false
+    id "io.freefair.lombok" version "5.3.0" apply false
 }
 
 subprojects {
