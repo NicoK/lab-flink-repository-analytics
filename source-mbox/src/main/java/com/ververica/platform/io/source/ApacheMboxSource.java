@@ -167,8 +167,7 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
       LocalDateTime maxDate = null;
       synchronized (ctx.getCheckpointLock()) {
         for (Email email : emails) {
-          long timestamp =
-              email.getDate().atZone(Utils.EVALUATION_ZONE).toInstant().toEpochMilli();
+          long timestamp = email.getDate().atZone(Utils.EVALUATION_ZONE).toInstant().toEpochMilli();
           ctx.collectWithTimestamp(email, timestamp);
           if (timestamp > maxTimestamp) {
             maxTimestamp = timestamp;
@@ -195,8 +194,7 @@ public class ApacheMboxSource extends RichSourceFunction<Email> implements Check
         }
 
         lastDate = nextDate;
-        long nextDateMillis =
-            nextDate.atZone(Utils.EVALUATION_ZONE).toInstant().toEpochMilli();
+        long nextDateMillis = nextDate.atZone(Utils.EVALUATION_ZONE).toInstant().toEpochMilli();
         ctx.emitWatermark(new Watermark(nextDateMillis - 1));
       }
     }

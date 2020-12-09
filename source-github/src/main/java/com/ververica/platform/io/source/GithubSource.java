@@ -2,9 +2,6 @@ package com.ververica.platform.io.source;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import org.apache.flink.configuration.Configuration;
