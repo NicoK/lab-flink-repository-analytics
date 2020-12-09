@@ -20,9 +20,9 @@ jobs:
         run: ./gradlew check
       - name: Build
         run: ./gradlew shadowJar
-      #- name: Publish to GitHub Packages Apache Maven
-        #run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-        #env:
-          #GITHUB_TOKEN: ${{ github.token }}
-        #if:
-          #success()
+      - name: Publish to GitHub Packages Apache Maven
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if:
+          success()
