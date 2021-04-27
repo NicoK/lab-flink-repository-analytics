@@ -16,6 +16,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.functions.UserDefinedFunction;
 import org.apache.flink.table.planner.factories.TestValuesTableFactory;
 import org.apache.flink.types.Row;
+import org.apache.flink.types.RowUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +47,7 @@ public class ArrayListAggFunctionITCase {
     env.setStateBackend(new RocksDBStateBackend((StateBackend) new MemoryStateBackend()));
 
     tEnv.createTemporaryFunction("ArrayListAggFunction", implementation);
+    RowUtils.USE_LEGACY_TO_STRING = true;
   }
 
   private void createSource(Row... inputData) {
