@@ -22,9 +22,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/** Integration test for {@link ArrayListAggFunction} and {@link ArrayListAggFunction2}. */
+/** Integration test for {@link ArrayListAggFunction3} and {@link ArrayListAggFunction4}. */
 @RunWith(Parameterized.class)
-public class ArrayListAggFunctionITCase {
+public class ArrayListAggFunction3ITCase {
 
   protected StreamExecutionEnvironment env;
   protected StreamTableEnvironment tEnv;
@@ -33,12 +33,11 @@ public class ArrayListAggFunctionITCase {
 
   @Parameterized.Parameters(name = "implementation = {0}")
   public static Iterable<Class<? extends UserDefinedFunction>> parameters() {
-    return Arrays.asList(ArrayListAggFunction.class, ArrayListAggFunction2.class);
+    return Arrays.asList(ArrayListAggFunction4.class, ArrayListAggFunction3.class);
   }
 
   @Before
   public void setUp() {
-    TestValuesTableFactory.clearAllData();
     env = StreamExecutionEnvironment.getExecutionEnvironment();
     env.setParallelism(4);
     tEnv =
@@ -51,26 +50,33 @@ public class ArrayListAggFunctionITCase {
     RowUtils.USE_LEGACY_TO_STRING = true;
   }
 
-  private void createSource(Row... inputData) {
+  /* TODO: rewrite (all) tests to use new fromChangelogStream/toChangelogStream, e.g. as in
+   * DataStreamJavaITCase.testFromAndToChangelogStreamUpsert()
+   */
+
+  private void createSource(String elementType, Row... inputData) {
     final String createSource =
         String.format(
             "CREATE TABLE input ( \n"
-                + "  `name` STRING,\n"
+                + "  `name` %s,\n"
                 + "  `age` INT"
                 + ") WITH (\n"
                 + "  'connector' = 'values',\n"
                 + "  'data-id' = '%s'\n"
                 + ")",
-            TestValuesTableFactory.registerData(Arrays.asList(inputData)));
+            elementType, TestValuesTableFactory.registerData(Arrays.asList(inputData)));
     tEnv.executeSql(createSource);
   }
 
-  private List<String> executeSql() throws InterruptedException, ExecutionException {
+  private List<String> executeSql(String elementType)
+      throws InterruptedException, ExecutionException {
     // create sink
     tEnv.executeSql(
         "CREATE TABLE sink (\n"
             + "    age INT,\n"
-            + "    names ARRAY<String>\n"
+            + "    names ARRAY<"
+            + elementType
+            + ">\n"
             + ") WITH (\n"
             + "  'connector' = 'values',\n"
             + "  'sink-insert-only' = 'false',\n"
@@ -91,10 +97,16 @@ public class ArrayListAggFunctionITCase {
   }
 
   @Test
-  public void aggregation1() throws ExecutionException, InterruptedException {
-    createSource(Row.of("john", 35), Row.of("alice", 32), Row.of("bob", 35), Row.of("sarah", 32));
+  public void stringAggregation1() throws ExecutionException, InterruptedException {
+    String elementType = "STRING";
+    createSource(
+        elementType,
+        Row.of("john", 35),
+        Row.of("alice", 32),
+        Row.of("bob", 35),
+        Row.of("sarah", 32));
 
-    List<String> rawResult = executeSql();
+    List<String> rawResult = executeSql(elementType);
 
     String[] expected =
         new String[] {
@@ -104,6 +116,26 @@ public class ArrayListAggFunctionITCase {
           "+I(32,[alice])",
           "-U(32,[alice])",
           "+U(32,[alice, sarah])"
+        };
+
+    assertThat(rawResult, containsInAnyOrder(expected));
+  }
+
+  @Test
+  public void intAggregation1() throws ExecutionException, InterruptedException {
+    String elementType = "INT";
+    createSource(elementType, Row.of(1, 35), Row.of(11, 32), Row.of(2, 35), Row.of(12, 32));
+
+    List<String> rawResult = executeSql(elementType);
+
+    String[] expected =
+        new String[] {
+          "+I(35,[1])",
+          "-U(35,[1])",
+          "+U(35,[1, 2])",
+          "+I(32,[11])",
+          "-U(32,[11])",
+          "+U(32,[11, 12])"
         };
 
     assertThat(rawResult, containsInAnyOrder(expected));

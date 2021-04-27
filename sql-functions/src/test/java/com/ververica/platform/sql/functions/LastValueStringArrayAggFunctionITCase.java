@@ -15,6 +15,7 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.planner.factories.TestValuesTableFactory;
 import org.apache.flink.types.Row;
+import org.apache.flink.types.RowUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,6 +38,7 @@ public class LastValueStringArrayAggFunctionITCase {
 
     tEnv.createTemporaryFunction(
         "LastValueStringArrayAggFunction", LastValueStringArrayAggFunction.class);
+    RowUtils.USE_LEGACY_TO_STRING = true;
   }
 
   private void createSource(Row... inputData) {
