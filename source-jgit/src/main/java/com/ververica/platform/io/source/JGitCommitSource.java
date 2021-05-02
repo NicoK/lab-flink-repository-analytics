@@ -120,7 +120,7 @@ public class JGitCommitSource extends RichSourceFunction<Commit> implements Chec
                     .committer(committer.getName())
                     .committerEmail(committer.getEmailAddress())
                     .filesChanged(getFileChanges(repo, gitCommit))
-                    .commitDate(Utils.dateToLocalDateTime(gitCommit.getCommitTime()))
+                    .commitDate(Utils.dateToLocalDateTime(gitCommit.getCommitTime() * 1000L))
                     .authorDate(Utils.dateToLocalDateTime(author.getWhen()))
                     .shortInfo(gitCommit.getFullMessage())
                     .sha1(gitCommit.getName())
