@@ -1,11 +1,9 @@
 package com.ververica.platform;
 
-import static com.ververica.platform.Utils.localDateTimeToInstant;
 import static org.apache.flink.table.api.Expressions.$;
 
 import com.ververica.platform.entities.Commit;
-import com.ververica.platform.io.source.GithubCommitSource;
-import java.time.Instant;
+import com.ververica.platform.io.source.JGitCommitSource;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -18,7 +16,8 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  */
 public class FlinkCommitsToKafka {
 
-  public static final String APACHE_FLINK_REPOSITORY = "apache/flink";
+  public static final String APACHE_FLINK_REPOSITORY = "https://github.com/apache/flink.git";
+  public static final String APACHE_FLINK_BRANCH = "refs/heads/master";
 
   public static void main(String[] args) {
     ParameterTool params = ParameterTool.fromArgs(args);
@@ -29,7 +28,7 @@ public class FlinkCommitsToKafka {
 
     // Source
     long delayBetweenQueries = params.getLong("poll-interval-ms", 10_000L);
-    String startDateString = params.get("start-date", "");
+    String ignoreCommitsBefore = params.get("ignore-commits-before", null);
 
     StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
     EnvironmentSettings settings =
@@ -39,7 +38,7 @@ public class FlinkCommitsToKafka {
     env.getConfig().enableObjectReuse();
 
     DataStream<Commit> commits =
-        env.addSource(getGithubCommitSource(delayBetweenQueries, startDateString))
+        env.addSource(getGitCommitSource(delayBetweenQueries, ignoreCommitsBefore))
             .name("flink-commit-source")
             .uid("flink-commit-source");
 
@@ -80,9 +79,9 @@ public class FlinkCommitsToKafka {
         .executeInsert("commits");
   }
 
-  private static GithubCommitSource getGithubCommitSource(
-      final long delayBetweenQueries, final String startDateString) {
-    Instant startDate = localDateTimeToInstant(Utils.parseFlexibleDate(startDateString));
-    return new GithubCommitSource(APACHE_FLINK_REPOSITORY, startDate, delayBetweenQueries);
+  private static JGitCommitSource getGitCommitSource(
+      final long delayBetweenQueries, final String ignoreCommitsBefore) {
+    return new JGitCommitSource(
+        APACHE_FLINK_REPOSITORY, APACHE_FLINK_BRANCH, ignoreCommitsBefore, delayBetweenQueries);
   }
 }
