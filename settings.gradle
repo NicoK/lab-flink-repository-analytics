@@ -8,6 +8,7 @@ include 'common'
 include 'import'
 include 'source-github'
 include 'source-jgit'
+include 'source-jira'
 include 'source-mbox'
 include 'sql-functions'
 
