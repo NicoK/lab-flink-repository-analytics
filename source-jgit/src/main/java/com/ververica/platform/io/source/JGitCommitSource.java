@@ -202,13 +202,16 @@ public class JGitCommitSource extends RichSourceFunction<Commit> implements Chec
             linesAdded += edit.getLengthB();
           }
         }
-        filesChanged.add(
-            FileChanged.builder()
-                .filename(filename)
-                .linesChanged(linesAdded + linesRemoved)
-                .linesAdded(linesAdded)
-                .linesRemoved(linesRemoved)
-                .build());
+        int linesChanged = linesAdded + linesRemoved;
+        if (linesChanged > 0) {
+          filesChanged.add(
+              FileChanged.builder()
+                  .filename(filename)
+                  .linesChanged(linesChanged)
+                  .linesAdded(linesAdded)
+                  .linesRemoved(linesRemoved)
+                  .build());
+        }
       }
     }
     return filesChanged.toArray(new FileChanged[0]);
