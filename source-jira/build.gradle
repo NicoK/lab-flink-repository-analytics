@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    maven {
+        url "https://packages.atlassian.com/mvn/maven-external"
+        mavenContent {
+            releasesOnly()
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.atlassian.jira:jira-rest-java-client-api:5.2.2'
+    implementation 'com.atlassian.jira:jira-rest-java-client-app:5.2.2'
+    implementation 'com.atlassian.jira:jira-rest-java-client-core:5.2.2'
+}
