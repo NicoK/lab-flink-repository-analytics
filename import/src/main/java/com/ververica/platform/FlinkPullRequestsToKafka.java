@@ -1,6 +1,7 @@
 package com.ververica.platform;
 
 import static com.ververica.platform.Utils.localDateTimeToInstant;
+import static org.apache.flink.table.api.Expressions.$;
 
 import com.ververica.platform.entities.PullRequest;
 import com.ververica.platform.io.source.GithubPullRequestSource;
@@ -73,7 +74,28 @@ public class FlinkPullRequestsToKafka {
             + "'format' = 'json'\n"
             + ")");
 
-    tableEnv.fromDataStream(commits).executeInsert("pulls");
+    tableEnv
+        .fromDataStream(
+            commits,
+            $("closedAt"),
+            $("commentsCount"),
+            $("commitCount"),
+            $("createdAt"),
+            $("creator"),
+            $("creatorEmail"),
+            $("filesChanged"),
+            $("isMerged"),
+            $("linesAdded"),
+            $("linesRemoved"),
+            $("mergedAt"),
+            $("mergedBy"),
+            $("mergedByEmail"),
+            $("number"),
+            $("reviewCommentCount"),
+            $("state"),
+            $("title"),
+            $("updatedAt"))
+        .executeInsert("pulls");
   }
 
   private static GithubPullRequestSource getGithubPullRequestSource(
